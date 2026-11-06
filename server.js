@@ -158,7 +158,7 @@ const wss = new WebSocketServer({ server, maxPayload: 2048 });
 let nextId = 1;
 const players = new Map();                  // ws -> player
 const rooms = new Map();                    // code -> room
-const queues = { 1: [], 2: [], 3: [], 4: [] };
+const queues = { 1: [], 2: [], 3: [], 4: [], 5: [] };
 
 function send(ws, obj) { if (ws.readyState === 1) ws.send(JSON.stringify(obj)); }
 function cleanName(n, id) {
@@ -172,7 +172,7 @@ function displayName(p, raw) {
   if (getUser(n.toLowerCase())) n = (n.slice(0, 12) + ' (guest)');
   return n;
 }
-function validLevel(l) { l = Number(l); return Number.isInteger(l) && l >= 1 && l <= 4 ? l : null; }
+function validLevel(l) { l = Number(l); return Number.isInteger(l) && l >= 1 && l <= 5 ? l : null; }
 function newCode() {
   const A = 'ABCDEFGHJKMNPQRSTUVWXYZ';
   for (;;) {

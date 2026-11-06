@@ -194,6 +194,7 @@ details>summary{cursor:pointer;font-weight:600}
   background:var(--card);padding:1px 6px;border-radius:6px;font-variant-numeric:tabular-nums}
 .itemlbl{position:absolute;left:12px;top:8px;font-size:.75rem;color:var(--muted)}
 #target{font-size:clamp(44px,11vw,92px);line-height:1.2;letter-spacing:.04em;word-break:break-word}
+#target.long{font-size:clamp(22px,4.5vw,36px);line-height:1.5}
 .g{transition:color .1s}
 #target .g{color:var(--muted)}
 #pTarget .g{color:var(--ink)}
@@ -511,10 +512,11 @@ const LEVELS=[
   {id:1,glyph:'ሀ',name:'Letter sprint',desc:'10 single letters'},
   {id:2,glyph:'ሀሁሂ',name:'Family relay',desc:'4 full families of 7 forms'},
   {id:3,glyph:'ሰላም',name:'Word dash',desc:'8 everyday words'},
-  {id:4,glyph:'ቤት ነው',name:'Sentence grand prix',desc:'5 sentences, short to long'}
+  {id:4,glyph:'ቤት ነው',name:'Sentence sprint',desc:'5 short sentences'},
+  {id:5,glyph:'ኢትዮጵያ',name:'Paragraph grand prix',desc:'14 diverse Amharic stories'}
 ];
 const RIVALS=[{name:'Abebe',color:'#f2b705'},{name:'Almaz',color:'#c0392b'}];
-const RIVAL_RATE={1:[0.9,1.3],2:[1.1,1.6],3:[1.3,1.9],4:[1.5,2.1]};   // keystrokes / second
+const RIVAL_RATE={1:[0.9,1.3],2:[1.1,1.6],3:[1.3,1.9],4:[1.5,2.1],5:[1.6,2.2]};   // keystrokes / second
 const DIFF={easy:0.7,normal:1,hard:1.4};
 const COLORS=['#1f7a4d','#f2b705','#c0392b','#2c6fbb'];
 const ord=n=>['','1st','2nd','3rd'][n]||(n+'th');
@@ -532,7 +534,7 @@ function normalize(o){
   if(!o||typeof o!=='object'||Array.isArray(o))return e;
   e.name=typeof o.name==='string'?o.name.slice(0,16):'';
   e.diff=['easy','normal','hard'].includes(o.diff)?o.diff:'normal';
-  if(o.best&&typeof o.best==='object')for(const k of ['1','2','3','4']){const b=o.best[k];if(b&&typeof b==='object')e.best[k]={score:num(b.score),place:num(b.place,1),wpm:num(b.wpm),acc:num(b.acc,100)};}
+  if(o.best&&typeof o.best==='object')for(const k of ['1','2','3','4','5']){const b=o.best[k];if(b&&typeof b==='object')e.best[k]={score:num(b.score),place:num(b.place,1),wpm:num(b.wpm),acc:num(b.acc,100)};}
   e.runs=(Array.isArray(o.runs)?o.runs:[]).filter(r=>r&&typeof r==='object').slice(-60).map(r=>({name:String(r.name||'Player').slice(0,22),level:num(r.level,1),mode:r.mode==='online'?'online':'solo',score:num(r.score),place:num(r.place,1),wpm:num(r.wpm),acc:num(r.acc,100),finished:!!r.finished,date:num(r.date)}));
   if(o.pvp&&typeof o.pvp==='object')e.pvp={races:num(o.pvp.races),wins:num(o.pvp.wins)};
   e.tests=(Array.isArray(o.tests)?o.tests:[]).filter(t=>t&&typeof t==='object').slice(-100).map(t=>({wpm:num(t.wpm),acc:num(t.acc,100),dur:num(t.dur,60),words:num(t.words),date:num(t.date)}));
@@ -551,7 +553,7 @@ function mergeData(a,b){
   const uniq=(x,y,cap)=>{const m=new Map();[...x,...y].forEach(r=>m.set(r.date+'|'+(r.score!=null?r.score:r.wpm),r));return [...m.values()].sort((p,q)=>p.date-q.date).slice(-cap);};
   o.tests=uniq(a.tests,b.tests,100);o.runs=uniq(a.runs,b.runs,60);
   for(const k of ['30','60','120']){const v=Math.max(a.bestTest[k]||0,b.bestTest[k]||0);if(v)o.bestTest[k]=v;}
-  for(const k of ['1','2','3','4']){const x=a.best[k],y=b.best[k];const w=x&&y?(x.score>=y.score?x:y):(x||y);if(w)o.best[k]=w;}
+  for(const k of ['1','2','3','4','5']){const x=a.best[k],y=b.best[k];const w=x&&y?(x.score>=y.score?x:y):(x||y);if(w)o.best[k]=w;}
   o.pvp={races:Math.max(a.pvp.races,b.pvp.races),wins:Math.max(a.pvp.wins,b.pvp.wins)};
   o.practice.letters=Math.max(a.practice.letters,b.practice.letters);
   o.practice.words=Math.max(a.practice.words,b.practice.words);
@@ -1056,6 +1058,7 @@ function onMsg(m){
 /* ---------- multiplayer page + lobby ---------- */
 const levelOpts=LEVELS.map(l=>`<option value="${l.id}">Level ${l.id}: ${l.name}</option>`).join('');
 $('mLevel').innerHTML=levelOpts;$('lLevel').innerHTML=levelOpts;
+$('mLevel').value='5';$('lLevel').value='5';
 const lvl=()=>+$('mLevel').value;
 function renderMulti(){
   $('mNameRow').hidden=!!AUTH.user;
@@ -1256,6 +1259,7 @@ function updateHud(){
   el.itemLbl.textContent=`${Math.min(S.idx+1,S.items.length)} / ${S.items.length}`;
 }
 function render(){
+  el.target.classList.toggle('long', S && S.target && S.target.length > 15);
   el.target.innerHTML=glyphsHtml(S.target,S.buf);
   const h=hintHtml(S.vars,S.buf);
   el.hint.innerHTML=el.hintToggle.checked?h.html:'';
