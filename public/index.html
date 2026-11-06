@@ -1,0 +1,1397 @@
+<!doctype html>
+<html lang="am">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fidel Race — Amharic typing</title>
+<style>
+:root{
+  --bg:#faf6ef; --card:#ffffff; --ink:#2b2118; --muted:#7a6c5d; --line:#e6dccd;
+  --green:#1f7a4d; --yellow:#f2b705; --red:#c0392b; --key:#f1eadf; --keyh:#e6dccd;
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#171310; --card:#221c17; --ink:#f3ece2; --muted:#a39382; --line:#3a3027; --key:#2c241d; --keyh:#3a3027;}
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:"Noto Sans Ethiopic","Nyala","Abyssinica SIL",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  -webkit-tap-highlight-color:transparent}
+button{font:inherit}
+#app{max-width:900px;margin:0 auto;padding:16px 16px 48px}
+h1,h2,h3{margin:0}
+h2{font-size:1.15rem;margin:18px 0 8px}
+.muted,small.muted{color:var(--muted)}
+[hidden]{display:none!important}
+
+/* ---------- top bar ---------- */
+.nav{position:sticky;top:0;z-index:30;background:var(--bg);border-bottom:1px solid var(--line)}
+.navin{max-width:900px;margin:0 auto;padding:8px 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.brand{font-size:1.35rem;font-weight:800;color:var(--ink);text-decoration:none;cursor:pointer;border:0;background:none;padding:4px 0}
+.brand span{color:var(--green)}
+.tabs{display:flex;gap:4px;flex:1;min-width:0;overflow-x:auto}
+.tab{border:0;background:none;color:var(--muted);padding:8px 12px;border-radius:10px;cursor:pointer;white-space:nowrap;font-weight:600}
+.tab:hover{background:var(--key);color:var(--ink)}
+.tab.active{background:var(--green);color:#fff}
+body.racing .tabs{pointer-events:none;opacity:.45}
+.acct{position:relative;margin-left:auto}
+@media (max-width:640px){
+  .navin{gap:4px 10px}
+  .acct{order:2}
+  .tabs{order:3;flex:1 0 100%;gap:4px;overflow:visible}
+  .tab{flex:1;text-align:center;padding:8px 4px;font-size:.92rem}
+}
+.menu{position:absolute;right:0;top:calc(100% + 6px);background:var(--card);border:1px solid var(--line);border-radius:12px;min-width:180px;padding:6px;box-shadow:0 8px 24px rgba(0,0,0,.18);z-index:40}
+.menu button{display:block;width:100%;text-align:left;border:0;background:none;color:var(--ink);padding:9px 10px;border-radius:8px;cursor:pointer}
+.menu button:hover{background:var(--key)}
+.menu .who{padding:8px 10px;color:var(--muted);font-size:.85rem;border-bottom:1px solid var(--line);margin-bottom:4px}
+.syncdot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--green);margin-right:6px}
+
+/* ---------- shared bits ---------- */
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}
+.card h3{margin:0 0 6px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.row.between{justify-content:space-between}
+.row.center{justify-content:center}
+input[type=text],input[type=password],select{padding:9px 10px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:inherit;max-width:100%}
+.btn{padding:10px 16px;border-radius:10px;border:0;background:var(--green);color:#fff;cursor:pointer}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn.alt{background:var(--key);color:var(--ink)}
+.btn.sm{padding:7px 12px;font-size:.9rem}
+.seg{display:inline-flex;background:var(--key);border-radius:10px;padding:3px;gap:2px;flex-wrap:wrap}
+.seg button{border:0;background:none;color:var(--ink);padding:7px 14px;border-radius:8px;cursor:pointer}
+.seg button.on{background:var(--green);color:#fff}
+.notice{background:rgba(192,57,43,.14);border:1px solid var(--red);border-radius:10px;padding:8px 12px;margin:12px 0}
+.notice.info{background:rgba(242,183,5,.18);border-color:var(--yellow)}
+.hud{display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:8px;margin-bottom:12px}
+.hud div{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:6px 10px}
+.hud span{display:block;font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+.hud b{font-size:1.15rem;font-variant-numeric:tabular-nums}
+.hud b.low{color:var(--red)}
+.stage{position:relative;text-align:center;padding:20px 10px}
+.hintline{margin-top:6px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:1.1rem;color:var(--muted);min-height:1.6em;word-break:break-all}
+.hintline b{color:var(--green)}
+.typedline{margin-top:10px;font-size:2rem;min-height:2.6rem;border-top:1px dashed var(--line);padding-top:8px}
+.typedline i{font-style:normal;border-bottom:3px solid var(--yellow)}
+.bad{animation:shake .25s}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.kb{display:flex;flex-direction:column;gap:6px;margin-top:6px}
+.kr{display:flex;justify-content:center;gap:5px}
+.key{flex:1 1 0;max-width:62px;min-height:52px;border:0;border-radius:9px;background:var(--key);color:var(--ink);
+  cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.1;touch-action:manipulation}
+.key:active{background:var(--keyh)}
+.key small{font-size:.7rem;color:var(--muted)}
+.key.wide{max-width:none;flex:3 1 0}
+.key.next{outline:3px solid var(--yellow);background:rgba(242,183,5,.25)}
+.key.badkey{background:rgba(192,57,43,.35)}
+.ref{display:flex;flex-wrap:wrap;gap:8px}
+.ref div{background:var(--key);border-radius:8px;padding:6px 10px;font-size:.95rem}
+.ref b{font-size:1.2rem;margin-right:6px}
+.big{font-size:2.4rem;margin:4px 0}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;margin:14px 0}
+.stats div{background:var(--key);border-radius:10px;padding:10px}
+.stats b{font-size:1.5rem;display:block}
+table{border-collapse:collapse;width:100%;font-size:.9rem}
+td,th{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left}
+.tag{font-size:.75rem;background:var(--key);border-radius:6px;padding:2px 6px;margin-left:6px}
+.hero{border-color:var(--green)}
+.hero h1{font-size:1.6rem;margin-bottom:4px}
+.hero h1 span{color:var(--green)}
+.steps{margin:10px 0;padding-left:1.2em}
+.steps li{margin:4px 0}
+.stripe{height:4px;border-radius:4px;margin:10px 0 0;max-width:120px;
+  background:linear-gradient(90deg,var(--green) 33%,var(--yellow) 33% 66%,var(--red) 66%)}
+details>summary{cursor:pointer;font-weight:600}
+
+/* ---------- fullscreen & split side layout ---------- */
+.test-layout{display:flex;flex-direction:column;gap:14px}
+.test-side{width:100%}
+.test-main{min-width:0;flex:1}
+.practice-layout{display:flex;flex-direction:column;gap:14px}
+.practice-side{width:100%}
+.practice-main{min-width:0;flex:1}
+
+@media (max-width:1023px){
+  .test-side{order:-1}
+  .practice-side{order:-1}
+}
+
+@media (min-width:1024px){
+  #app{max-width:1320px;padding:20px 24px 60px}
+  .navin{max-width:1320px;padding:10px 24px}
+  .test-layout{display:grid;grid-template-columns:minmax(0,1fr) 390px;gap:24px;align-items:start}
+  .test-side{position:sticky;top:68px}
+  .practice-layout{display:grid;grid-template-columns:minmax(0,1fr) 390px;gap:24px;align-items:start}
+  .practice-side{position:sticky;top:68px}
+}
+
+:fullscreen #app, :-webkit-full-screen #app, body.is-fullscreen #app{
+  max-width:1420px;padding:24px 32px 60px;
+}
+:fullscreen .navin, :-webkit-full-screen .navin, body.is-fullscreen .navin{
+  max-width:1420px;padding:12px 32px;
+}
+:fullscreen .test-layout, :-webkit-full-screen .test-layout, body.is-fullscreen .test-layout{
+  display:grid;grid-template-columns:minmax(0,1fr) 420px;gap:28px;align-items:start;
+}
+:fullscreen .test-side, :-webkit-full-screen .test-side, body.is-fullscreen .test-side{
+  position:sticky;top:20px;
+}
+:fullscreen .practice-layout, :-webkit-full-screen .practice-layout, body.is-fullscreen .practice-layout{
+  display:grid;grid-template-columns:minmax(0,1fr) 420px;gap:28px;align-items:start;
+}
+:fullscreen .practice-side, :-webkit-full-screen .practice-side, body.is-fullscreen .practice-side{
+  position:sticky;top:20px;
+}
+
+/* ---------- speed test ---------- */
+.passage{font-size:clamp(24px,4.6vw,36px);line-height:2;text-align:left;padding:4px 6px;word-break:break-word}
+.passage .w{display:inline-block;margin:0 4px;padding:0 6px;border-radius:8px;color:var(--muted)}
+.passage .w.ok{color:var(--green);opacity:.55}
+.passage .w.cur{background:rgba(242,183,5,.25);color:var(--ink)}
+.passage .w.cur .g.done{color:var(--green)}
+.starthint{color:var(--muted);margin-top:8px;font-size:.9rem}
+.bigwpm b{font-size:4rem;color:var(--green);line-height:1}
+.bigwpm span{font-size:1.2rem;color:var(--muted);margin-left:6px}
+
+/* ---------- practice ---------- */
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.chip{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:5px 11px;cursor:pointer;font-size:.95rem}
+.chip.on{background:var(--green);border-color:var(--green);color:#fff}
+.chip small{color:inherit;opacity:.7;margin-left:4px}
+#pTarget{font-size:clamp(64px,16vw,120px);line-height:1.15}
+#pMeaning{font-size:1.2rem;color:var(--muted);min-height:1.6em}
+.chart{overflow-x:auto}
+.chart table td{text-align:center;white-space:nowrap;padding:4px 6px}
+.chart .g{font-size:1.3rem;display:block}
+.chart small{color:var(--muted)}
+.chart .rowhead{cursor:pointer;color:var(--green);font-weight:700;text-align:left}
+.weak{display:flex;flex-wrap:wrap;gap:8px}
+.weak div{background:var(--key);border-radius:8px;padding:6px 10px}
+.weak b{font-size:1.4rem;margin-right:6px}
+
+/* ---------- multiplayer ---------- */
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}
+.opts .card{margin:0;display:flex;flex-direction:column;gap:10px}
+.opts .card p{margin:0;color:var(--muted);font-size:.9rem;flex:1}
+#code{width:90px;text-transform:uppercase;letter-spacing:.2em;text-align:center;font-weight:700}
+.qbox{display:flex;justify-content:space-between;align-items:center;gap:10px;background:rgba(242,183,5,.18);border:1px solid var(--yellow);border-radius:10px;padding:10px 12px}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--yellow);margin-right:8px;animation:pulse 1s infinite}
+@keyframes pulse{50%{opacity:.25}}
+.codebox{font-size:3rem;font-weight:800;letter-spacing:.25em;text-align:center;color:var(--green);margin:4px 0}
+.plist{list-style:none;margin:10px 0;padding:0}
+.plist li{display:flex;justify-content:space-between;padding:8px 10px;border-bottom:1px solid var(--line)}
+
+/* ---------- race ---------- */
+.track{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+.lane{position:relative;height:42px;background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.lane.me{border-color:var(--green);border-width:2px}
+.lane.gone{opacity:.45}
+.lane .fill{position:absolute;left:0;top:0;bottom:0;width:0;opacity:.22;transition:width .15s linear}
+.lane .car{position:absolute;top:50%;left:0;font-size:1.5rem;line-height:1;transform:translateY(-50%) scaleX(-1);transition:left .15s linear}
+.lane .nm{position:absolute;left:8px;top:2px;font-size:.68rem;color:var(--muted);z-index:1}
+.lane .flag{position:absolute;right:6px;top:50%;transform:translateY(-50%);font-size:1.2rem}
+.lane .wpm{position:absolute;right:36px;top:50%;transform:translateY(-50%);font-size:.8rem;font-weight:700;z-index:1;
+  background:var(--card);padding:1px 6px;border-radius:6px;font-variant-numeric:tabular-nums}
+.itemlbl{position:absolute;left:12px;top:8px;font-size:.75rem;color:var(--muted)}
+#target{font-size:clamp(44px,11vw,92px);line-height:1.2;letter-spacing:.04em;word-break:break-word}
+.g{transition:color .1s}
+#target .g{color:var(--muted)}
+#pTarget .g{color:var(--ink)}
+#pTarget.words{font-size:clamp(44px,11vw,84px);word-break:break-word}
+#target .g.done,#pTarget .g.done{color:var(--green)}
+.count{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:10px;
+  font-size:5rem;font-weight:700;background:rgba(0,0,0,.5);color:#fff;border-radius:14px;z-index:5}
+.standings{text-align:left;margin:10px auto 16px;max-width:460px}
+.standings div{display:flex;justify-content:space-between;gap:12px;padding:6px 8px;border-bottom:1px solid var(--line)}
+
+/* ---------- modal ---------- */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:60;display:flex;align-items:flex-start;justify-content:center;padding:60px 16px 16px;overflow:auto}
+.modalbox{position:relative;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;width:100%;max-width:420px}
+.modalbox h2{margin:0 0 6px}
+.modalbox label{display:block;margin:12px 0 4px;font-size:.9rem;color:var(--muted)}
+.modalbox input{width:100%}
+.modalbox .x{position:absolute;right:10px;top:8px;border:0;background:none;color:var(--muted);font-size:1.6rem;cursor:pointer;line-height:1}
+</style>
+</head>
+<body>
+
+<!-- ================= TOP BAR ================= -->
+<header class="nav">
+  <div class="navin">
+    <button class="brand" id="brand" aria-label="Fidel Race home">ፊደል <span>Race</span></button>
+    <nav class="tabs" id="tabs" aria-label="Main">
+      <button class="tab active" data-view="test">⌨️ Speed test</button>
+      <button class="tab" data-view="practice">📖 Practice</button>
+      <button class="tab" data-view="multi">🏁 Multiplayer</button>
+    </nav>
+    <div class="row" style="margin-left:auto;gap:8px">
+      <button class="btn alt sm" id="fsBtn" title="Toggle Fullscreen" aria-label="Toggle Fullscreen" style="display:inline-flex;align-items:center;gap:4px">⛶ Fullscreen</button>
+      <div class="acct">
+        <button class="btn alt sm" id="accBtn">Sign in</button>
+        <div class="menu" id="accMenu" hidden>
+          <div class="who" id="accWho"></div>
+          <button id="accStats">📊 My stats</button>
+          <button id="accOut">Sign out</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main id="app">
+  <div id="notice" class="notice" hidden></div>
+
+  <!-- ================= SPEED TEST (home) ================= -->
+  <section id="v-test">
+    <div class="test-layout">
+      <div class="test-main">
+        <div class="row between" style="margin-bottom:12px">
+          <div class="row">
+            <div class="seg" id="tDur" role="group" aria-label="Test length">
+              <button data-d="30">30s</button><button data-d="60" class="on">60s</button><button data-d="120">2 min</button>
+            </div>
+            <span class="muted" id="tBest"></span>
+          </div>
+          <div class="row">
+            <label><input type="checkbox" id="tHints" checked> Show hints</label>
+            <label><input type="checkbox" id="tKb" checked> Keyboard</label>
+            <button class="btn alt sm" id="tRestart">↻ Restart</button>
+          </div>
+        </div>
+
+        <div id="tPlay">
+          <div class="hud">
+            <div><span>Time left</span><b id="tTime">60.0s</b></div>
+            <div><span>WPM</span><b id="tWpm">0</b></div>
+            <div><span>Accuracy</span><b id="tAcc">100%</b></div>
+            <div><span>Words</span><b id="tWords">0</b></div>
+          </div>
+          <div class="card stage" id="tStage">
+            <div class="passage" id="tPassage"></div>
+            <div class="hintline" id="tHint"></div>
+            <div class="typedline" id="tTyped"></div>
+            <div class="starthint" id="tStartHint">The timer starts with your first key. Esc restarts.</div>
+          </div>
+          <div class="kb" id="kbT"></div>
+        </div>
+
+        <div class="card" id="tResult" style="text-align:center" hidden>
+          <div class="big" id="trTitle">Time's up!</div>
+          <div class="bigwpm"><b id="trWpm">0</b><span>WPM</span></div>
+          <div class="stats" id="trStats"></div>
+          <div class="muted" id="trBest"></div>
+          <div class="row center" style="margin-top:12px">
+            <button class="btn" id="trAgain">Try again</button>
+            <button class="btn alt" id="trPractice">Practice letters</button>
+            <button class="btn alt" id="trMulti">Race someone 🏁</button>
+          </div>
+          <p class="muted" id="trSignin" style="margin:12px 0 0;font-size:.9rem" hidden>Want to keep your results? <a href="#" id="trSigninLink">Sign in</a> (optional) and your history is saved.</p>
+        </div>
+      </div>
+
+      <aside class="test-side">
+        <div class="card hero desc-note">
+          <h1>Amharic <span>typing speed test</span></h1>
+          <p style="margin:6px 0 0">How fast can you type ፊደል (Fidel)? Pick a time, start typing, and see your speed and accuracy when the clock runs out. No account needed.</p>
+          <details id="how" open style="margin-top:10px">
+            <summary>How it works</summary>
+            <ol class="steps">
+              <li><b>Read the highlighted word.</b> Words are everyday Amharic, like ሰላም, ቡና and ወንዝ.</li>
+              <li><b>Type its sound with your keyboard</b>: the consonant, then the vowel. For example <b>s + e = ሰ</b>, <b>l + a = ላ</b> and <b>s + e + l + a + m = ሰላም</b>.</li>
+              <li><b>It moves on by itself</b> when the word is finished. A wrong key is ignored and lowers your accuracy. Backspace fixes the current word.</li>
+            </ol>
+            <div class="muted" style="margin-bottom:6px">The vowel you add picks the form of the letter:</div>
+            <div class="ref" id="ref"></div>
+            <p class="muted" style="margin:10px 0 0;font-size:.9rem">A consonant on its own gives the 6th form (ህ). Vowels: <b>e</b> (1st: He), <b>u</b> (2nd: Hu), <b>i</b> (3rd: Hi), <b>a</b> (4th: Ha), <b>ie</b> (5th: Hie), <b>o</b> (7th: Ho). Turn on <b>Show hints</b> if unsure.</p>
+          </details>
+          <div class="stripe"></div>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ================= PRACTICE ================= -->
+  <section id="v-practice" hidden>
+    <div class="practice-layout">
+      <div class="practice-main">
+        <div class="seg" id="pMode" style="margin-bottom:10px">
+          <button data-m="letters" class="on">All the letters</button>
+          <button data-m="words">Words</button>
+        </div>
+        <div id="pRowsWrap">
+          <div class="muted" style="font-size:.9rem">Which letters? Pick a family, or practise them all (203 letters).</div>
+          <div class="chips" id="pRows"></div>
+        </div>
+        <div class="hud">
+          <div><span>Typed</span><b id="pTyped">0</b></div>
+          <div><span>Accuracy</span><b id="pAcc">100%</b></div>
+          <div><span>Streak</span><b id="pStreak">0</b></div>
+          <div><span>Best streak</span><b id="pBest">0</b></div>
+        </div>
+        <div class="card stage" id="pStage">
+          <div id="pTarget"></div>
+          <div id="pMeaning"></div>
+          <div class="hintline" id="pHint"></div>
+          <div class="typedline" id="pTyped2"></div>
+        </div>
+        <div class="row between" style="margin-bottom:8px">
+          <div class="row">
+            <label><input type="checkbox" id="pHints" checked> Show hints</label>
+            <label id="pMeaningLbl" hidden><input type="checkbox" id="pMeaningOn" checked> Show meaning</label>
+          </div>
+          <button class="btn alt sm" id="pReset">↻ Reset stats</button>
+        </div>
+        <div class="kb" id="kbP"></div>
+        <details class="card" id="pChartBox" style="margin-top:14px">
+          <summary>Letter chart: how to type every letter</summary>
+          <p class="muted" style="font-size:.9rem">Tap a row's first letter to practise only that family.</p>
+          <div class="chart" id="pChart"></div>
+        </details>
+      </div>
+
+      <aside class="practice-side">
+        <div class="card hero">
+          <h1><span>Practice</span></h1>
+          <p style="margin:6px 0 0">No timer, no pressure. Learn the keys at your own pace. Letters you miss come back more often until you know them.</p>
+          <div class="stripe"></div>
+        </div>
+        <div class="card" id="pWeakCard" style="margin-top:14px" hidden>
+          <h3>Needs more practice</h3>
+          <div class="weak" id="pWeak"></div>
+          <button class="btn sm" id="pWeakGo" style="margin-top:10px">Practise these letters</button>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ================= MULTIPLAYER ================= -->
+  <section id="v-multi" hidden>
+    <div class="card hero">
+      <h1><span>Multiplayer</span></h1>
+      <p style="margin:6px 0 0">Race for the finish line. Pick a level, then race bots, find a real opponent, or open a private room for your friends.</p>
+      <div class="stripe"></div>
+    </div>
+    <div class="card">
+      <div class="row">
+        <label for="mLevel">Level</label>
+        <select id="mLevel"></select>
+        <span id="mNameRow" class="row">
+          <label for="mName">Your name</label>
+          <input id="mName" type="text" maxlength="16" placeholder="Guest">
+        </span>
+      </div>
+      <div class="muted" id="mBest" style="margin-top:8px;font-size:.9rem"></div>
+    </div>
+    <div class="opts">
+      <div class="card">
+        <h3>🤖 Race bots</h3>
+        <p>Warm up against Abebe and Almaz. Works offline.</p>
+        <div class="row"><label for="diff">Bot speed</label>
+          <select id="diff"><option value="easy">Easy</option><option value="normal">Normal</option><option value="hard">Hard</option></select></div>
+        <button class="btn" id="btnBots">Start race</button>
+      </div>
+      <div class="card">
+        <h3>⚡ PvP — quick match</h3>
+        <p>Get matched with the next real player who picks the same level.</p>
+        <button class="btn" id="btnQuick">Find an opponent</button>
+        <div class="qbox" id="qbox" hidden>
+          <span><span class="dot"></span><span id="qtext">Looking for an opponent…</span></span>
+          <button class="btn alt sm" id="btnCancel">Cancel</button>
+        </div>
+        <div class="muted" id="pvpRec" style="font-size:.9rem"></div>
+      </div>
+      <div class="card">
+        <h3>🏠 Private room</h3>
+        <p>Race your friends. Create a room and share the 4-letter code, or join one.</p>
+        <button class="btn alt" id="btnCreate">Create a room</button>
+        <div class="row">
+          <input id="code" type="text" maxlength="4" placeholder="CODE" autocomplete="off" aria-label="Room code">
+          <button class="btn alt" id="btnJoin">Join</button>
+        </div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:14px">
+      <h3>Recent races</h3>
+      <div id="board"></div>
+    </div>
+  </section>
+
+  <!-- ================= LOBBY ================= -->
+  <section id="v-lobby" hidden>
+    <div class="card" style="text-align:center">
+      <div class="muted">Room code: share it with your friends</div>
+      <div class="codebox" id="lCode">----</div>
+      <ul class="plist" id="lPlayers" style="text-align:left"></ul>
+      <div class="row center" style="margin-bottom:10px">
+        <label for="lLevel">Level</label>
+        <select id="lLevel"></select>
+      </div>
+      <div class="muted" id="lWait" style="margin-bottom:10px"></div>
+      <div class="row center">
+        <button class="btn" id="btnStart">Start race</button>
+        <button class="btn alt" id="btnLeave">Leave room</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= RACE ================= -->
+  <section id="v-game" hidden>
+    <div class="track" id="track"></div>
+    <div class="hud">
+      <div><span>Level</span><b id="hLevel">1</b></div>
+      <div><span>Place</span><b id="hPlace">1st</b></div>
+      <div><span>Time left</span><b id="hTime">0s</b></div>
+      <div><span>Score</span><b id="hScore">0</b></div>
+      <div><span>WPM</span><b id="hWpm">0</b></div>
+      <div><span>Accuracy</span><b id="hAcc">100%</b></div>
+    </div>
+    <div class="card stage">
+      <div class="itemlbl" id="itemLbl"></div>
+      <div id="target"></div>
+      <div class="hintline" id="hint"></div>
+      <div class="typedline" id="typed"></div>
+      <div class="count" id="count" hidden>3</div>
+    </div>
+    <div class="row between" style="margin-bottom:8px">
+      <label><input type="checkbox" id="hintToggle" checked> Show hints</label>
+      <button class="btn alt" id="quit">Quit race</button>
+    </div>
+    <div class="kb" id="kbG"></div>
+  </section>
+
+  <!-- ================= RACE RESULT ================= -->
+  <section id="v-result" hidden>
+    <div class="card" style="text-align:center">
+      <div class="big" id="rTitle">ጥሩ!</div>
+      <div id="rSub" class="muted"></div>
+      <div class="stats" id="rStats"></div>
+      <div class="standings" id="rBoard"></div>
+      <div class="row center">
+        <button class="btn" id="rRetry">Race again</button>
+        <button class="btn" id="rNext">Next level</button>
+        <button class="btn" id="rRoom">Back to room</button>
+        <button class="btn alt" id="rMenu">Multiplayer menu</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- ================= SIGN IN (optional) ================= -->
+<div class="modal" id="authModal" hidden role="dialog" aria-modal="true" aria-labelledby="authTitle">
+  <div class="modalbox">
+    <button class="x" id="authClose" aria-label="Close">×</button>
+    <h2 id="authTitle">Sign in</h2>
+    <p class="muted" style="margin:0 0 12px;font-size:.9rem">Optional. An account saves your speed-test history, practice progress and online record so they follow you to any device. Everything works without one.</p>
+    <div class="seg" id="authTabs"><button data-a="login" class="on">Sign in</button><button data-a="register">Create account</button></div>
+    <form id="authForm" autocomplete="on">
+      <label for="auUser">Username</label>
+      <input id="auUser" type="text" maxlength="20" autocomplete="username" autocapitalize="none" spellcheck="false">
+      <label for="auPass">Password</label>
+      <input id="auPass" type="password" maxlength="100" autocomplete="current-password">
+      <div id="auErr" class="notice" hidden></div>
+      <button class="btn" id="auSubmit" type="submit" style="margin-top:14px;width:100%">Sign in</button>
+      <p class="muted" id="auHelp" style="margin:10px 0 0;font-size:.8rem" hidden>No email needed. Keep your password somewhere safe: there is no reset yet.</p>
+    </form>
+  </div>
+</div>
+
+<div class="modal" id="statsModal" hidden role="dialog" aria-modal="true" aria-labelledby="stTitle">
+  <div class="modalbox" style="max-width:520px">
+    <button class="x" id="statsClose" aria-label="Close">×</button>
+    <h2 id="stTitle">My stats</h2>
+    <div id="stBody"></div>
+  </div>
+</div>
+
+<script src="core.js"></script>
+<script>
+/* parse, variants, makeItems, VOCAB, FAMILIES ... come from core.js (shared with the server) */
+const PREVIEW=false;   // the single-file preview build flips this: no server there
+const LEVELS=[
+  {id:1,glyph:'ሀ',name:'Letter sprint',desc:'10 single letters'},
+  {id:2,glyph:'ሀሁሂ',name:'Family relay',desc:'4 full families of 7 forms'},
+  {id:3,glyph:'ሰላም',name:'Word dash',desc:'8 everyday words'},
+  {id:4,glyph:'ቤት ነው',name:'Sentence grand prix',desc:'5 sentences, short to long'}
+];
+const RIVALS=[{name:'Abebe',color:'#f2b705'},{name:'Almaz',color:'#c0392b'}];
+const RIVAL_RATE={1:[0.9,1.3],2:[1.1,1.6],3:[1.3,1.9],4:[1.5,2.1]};   // keystrokes / second
+const DIFF={easy:0.7,normal:1,hard:1.4};
+const COLORS=['#1f7a4d','#f2b705','#c0392b','#2c6fbb'];
+const ord=n=>['','1st','2nd','3rd'][n]||(n+'th');
+const $=id=>document.getElementById(id);
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+
+/* =====================================================================
+   SAVED DATA  (this device always; the account too when signed in)
+   ===================================================================== */
+const KEY='fidel-race-v3';
+const EMPTY=()=>({name:'',diff:'normal',best:{},runs:[],pvp:{races:0,wins:0},tests:[],bestTest:{},practice:{letters:0,words:0,weak:{}}});
+const num=(v,d=0)=>Number.isFinite(+v)?+v:d;
+function normalize(o){
+  const e=EMPTY();
+  if(!o||typeof o!=='object'||Array.isArray(o))return e;
+  e.name=typeof o.name==='string'?o.name.slice(0,16):'';
+  e.diff=['easy','normal','hard'].includes(o.diff)?o.diff:'normal';
+  if(o.best&&typeof o.best==='object')for(const k of ['1','2','3','4']){const b=o.best[k];if(b&&typeof b==='object')e.best[k]={score:num(b.score),place:num(b.place,1),wpm:num(b.wpm),acc:num(b.acc,100)};}
+  e.runs=(Array.isArray(o.runs)?o.runs:[]).filter(r=>r&&typeof r==='object').slice(-60).map(r=>({name:String(r.name||'Player').slice(0,22),level:num(r.level,1),mode:r.mode==='online'?'online':'solo',score:num(r.score),place:num(r.place,1),wpm:num(r.wpm),acc:num(r.acc,100),finished:!!r.finished,date:num(r.date)}));
+  if(o.pvp&&typeof o.pvp==='object')e.pvp={races:num(o.pvp.races),wins:num(o.pvp.wins)};
+  e.tests=(Array.isArray(o.tests)?o.tests:[]).filter(t=>t&&typeof t==='object').slice(-100).map(t=>({wpm:num(t.wpm),acc:num(t.acc,100),dur:num(t.dur,60),words:num(t.words),date:num(t.date)}));
+  if(o.bestTest&&typeof o.bestTest==='object')for(const k of ['30','60','120'])if(o.bestTest[k]!=null)e.bestTest[k]=num(o.bestTest[k]);
+  if(o.practice&&typeof o.practice==='object'){
+    e.practice.letters=num(o.practice.letters);e.practice.words=num(o.practice.words);
+    const w=o.practice.weak;
+    if(w&&typeof w==='object')for(const g of Object.keys(w).slice(0,300)){const v=Math.min(9,Math.max(0,num(w[g])));if(v>0&&g.length<=2)e.practice.weak[g]=v;}
+  }
+  return e;
+}
+// Combine two copies (this device + the account) without losing either
+function mergeData(a,b){
+  const o=EMPTY();
+  o.name=a.name||b.name;o.diff=a.diff;
+  const uniq=(x,y,cap)=>{const m=new Map();[...x,...y].forEach(r=>m.set(r.date+'|'+(r.score!=null?r.score:r.wpm),r));return [...m.values()].sort((p,q)=>p.date-q.date).slice(-cap);};
+  o.tests=uniq(a.tests,b.tests,100);o.runs=uniq(a.runs,b.runs,60);
+  for(const k of ['30','60','120']){const v=Math.max(a.bestTest[k]||0,b.bestTest[k]||0);if(v)o.bestTest[k]=v;}
+  for(const k of ['1','2','3','4']){const x=a.best[k],y=b.best[k];const w=x&&y?(x.score>=y.score?x:y):(x||y);if(w)o.best[k]=w;}
+  o.pvp={races:Math.max(a.pvp.races,b.pvp.races),wins:Math.max(a.pvp.wins,b.pvp.wins)};
+  o.practice.letters=Math.max(a.practice.letters,b.practice.letters);
+  o.practice.words=Math.max(a.practice.words,b.practice.words);
+  for(const g of new Set([...Object.keys(a.practice.weak),...Object.keys(b.practice.weak)]))o.practice.weak[g]=Math.max(a.practice.weak[g]||0,b.practice.weak[g]||0);
+  return o;
+}
+function loadLocal(){try{return normalize(JSON.parse(localStorage.getItem(KEY)));}catch(e){return EMPTY();}}
+let store=loadLocal();
+function saveLocal(){try{localStorage.setItem(KEY,JSON.stringify(store));}catch(e){}}
+function persist(){saveLocal();scheduleSync();}
+
+// small UI preferences (never synced)
+let prefs={dur:60,hints:true,kb:true};
+try{prefs=Object.assign(prefs,JSON.parse(localStorage.getItem('fidel-prefs')));}catch(e){}
+function savePrefs(){try{localStorage.setItem('fidel-prefs',JSON.stringify(prefs));}catch(e){}}
+
+/* =====================================================================
+   ACCOUNT (optional)
+   ===================================================================== */
+const AUTH={token:null,user:null};
+try{AUTH.token=localStorage.getItem('fidel-token');}catch(e){}
+function setToken(t){AUTH.token=t;try{t?localStorage.setItem('fidel-token',t):localStorage.removeItem('fidel-token');}catch(e){}}
+async function api(path,method,body){
+  if(PREVIEW){const e=new Error('Accounts need the server. Run "npm start" to try them.');e.status=0;throw e;}
+  const headers={'Content-Type':'application/json'};
+  if(AUTH.token)headers.Authorization='Bearer '+AUTH.token;
+  let r;
+  try{r=await fetch(path,{method,headers,body:body?JSON.stringify(body):undefined});}
+  catch(e){const err=new Error('Could not reach the server.');err.status=0;throw err;}
+  let j={};try{j=await r.json();}catch(e){}
+  if(!r.ok){const err=new Error(j.error||'Something went wrong.');err.status=r.status;throw err;}
+  return j;
+}
+let syncT=null;
+function scheduleSync(){if(!AUTH.user)return;clearTimeout(syncT);syncT=setTimeout(pushData,1500);}
+async function pushData(){
+  if(!AUTH.user)return;
+  clearTimeout(syncT);
+  try{await api('/api/save','POST',{data:store});}
+  catch(e){if(e.status===401)forgetSession();}
+}
+function forgetSession(){setToken(null);AUTH.user=null;renderAcct();notice('You were signed out. Sign in again to keep saving.',true);}
+function myName(){return AUTH.user||store.name||'';}
+
+async function initAuth(){
+  if(!AUTH.token||PREVIEW)return;
+  try{
+    const r=await api('/api/me','GET');
+    AUTH.user=r.user.name;
+    store=mergeData(store,normalize(r.user.data));
+    saveLocal();pushData();
+    afterAuthChange();
+    if(NET.ws)sendNet({t:'auth',token:AUTH.token});
+  }catch(e){if(e.status===401)setToken(null);}
+}
+function afterAuthChange(){renderAcct();renderMulti();renderTestBest();if(cur==='practice')renderPracticeAll();}
+
+function renderAcct(){
+  $('accBtn').textContent=AUTH.user?'👤 '+AUTH.user:'Sign in';
+  $('accWho').innerHTML=AUTH.user?'<span class="syncdot"></span>Signed in as <b>'+esc(AUTH.user)+'</b>':'';
+  $('accMenu').hidden=true;
+  $('trSignin').hidden=!!AUTH.user||!$('tResult')||$('tResult').hidden;
+}
+$('accBtn').onclick=e=>{
+  e.stopPropagation();
+  if(AUTH.user)$('accMenu').hidden=!$('accMenu').hidden;
+  else openAuth('login');
+};
+document.addEventListener('click',e=>{if(!e.target.closest('.acct'))$('accMenu').hidden=true;});
+$('accOut').onclick=async()=>{
+  $('accMenu').hidden=true;
+  await pushData();                                   // make sure the account has everything first
+  try{await api('/api/logout','POST',{});}catch(e){}
+  setToken(null);AUTH.user=null;
+  store=EMPTY();saveLocal();                          // don't leave one person's data on a shared device
+  if(NET.ws)sendNet({t:'auth',token:''});
+  afterAuthChange();
+  notice('Signed out. Your data stays saved in your account.',true);
+};
+$('accStats').onclick=()=>{$('accMenu').hidden=true;openStats();};
+
+let authMode='login';
+function openAuth(mode){
+  setAuthMode(mode||'login');
+  $('auErr').hidden=true;$('auPass').value='';
+  $('authModal').hidden=false;
+  setTimeout(()=>$('auUser').focus(),30);
+}
+function closeModals(){$('authModal').hidden=true;$('statsModal').hidden=true;}
+function setAuthMode(m){
+  authMode=m;
+  [...$('authTabs').children].forEach(b=>b.classList.toggle('on',b.dataset.a===m));
+  $('authTitle').textContent=m==='login'?'Sign in':'Create account';
+  $('auSubmit').textContent=m==='login'?'Sign in':'Create account';
+  $('auPass').autocomplete=m==='login'?'current-password':'new-password';
+  $('auHelp').hidden=m==='login';
+}
+$('authTabs').onclick=e=>{const b=e.target.closest('button');if(b)setAuthMode(b.dataset.a);};
+$('authClose').onclick=closeModals;$('statsClose').onclick=closeModals;
+$('authModal').addEventListener('mousedown',e=>{if(e.target===$('authModal'))closeModals();});
+$('statsModal').addEventListener('mousedown',e=>{if(e.target===$('statsModal'))closeModals();});
+$('authForm').onsubmit=async e=>{
+  e.preventDefault();
+  const username=$('auUser').value.trim(),password=$('auPass').value;
+  const err=$('auErr');err.hidden=true;
+  if(!username||!password){err.textContent='Enter a username and password.';err.hidden=false;return;}
+  $('auSubmit').disabled=true;
+  try{
+    const r=await api(authMode==='login'?'/api/login':'/api/register','POST',{username,password});
+    setToken(r.token);AUTH.user=r.user.name;
+    store=mergeData(store,normalize(r.user.data));      // keep what this device already had
+    saveLocal();await pushData();
+    if(NET.ws)sendNet({t:'auth',token:AUTH.token});
+    closeModals();afterAuthChange();
+    notice(authMode==='login'?'Welcome back, '+AUTH.user+'!':'Account created. Your progress is now saved.',true);
+  }catch(ex){err.textContent=ex.message;err.hidden=false;}
+  $('auSubmit').disabled=false;
+};
+function openStats(){
+  const t=store.tests,last=t.slice(-10);
+  const avgAcc=last.length?Math.round(last.reduce((a,x)=>a+x.acc,0)/last.length):null;
+  const weak=Object.entries(store.practice.weak).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  $('stBody').innerHTML=
+    `<p class="muted" style="margin-top:0">${AUTH.user?'Saved to your account <b>'+esc(AUTH.user)+'</b>.':'Saved on this device only. Sign in to keep it everywhere.'}</p>`+
+    `<div class="stats">`+
+    ['30','60','120'].map(k=>`<div><b>${store.bestTest[k]||'—'}</b>Best ${k==='120'?'2 min':k+'s'} (WPM)</div>`).join('')+
+    `<div><b>${t.length}</b>Tests taken</div><div><b>${avgAcc==null?'—':avgAcc+'%'}</b>Avg accuracy (last 10)</div>`+
+    `<div><b>${store.practice.letters}</b>Letters practised</div><div><b>${store.practice.words}</b>Words practised</div>`+
+    `<div><b>${store.pvp.wins}/${store.pvp.races}</b>Online wins</div></div>`+
+    (last.length?`<h3 style="margin-top:6px">Recent tests</h3><table><tr><th>Length</th><th>WPM</th><th>Accuracy</th><th>Words</th></tr>`+
+      last.slice().reverse().map(x=>`<tr><td>${x.dur===120?'2 min':x.dur+'s'}</td><td>${x.wpm}</td><td>${x.acc}%</td><td>${x.words}</td></tr>`).join('')+`</table>`:'<p class="muted">Take a speed test to see your history here.</p>')+
+    (weak.length?`<h3 style="margin-top:14px">Letters to practise</h3><div class="weak">${weak.map(([g])=>`<div><b>${esc(g)}</b>${esc(variants(g)[0])}</div>`).join('')}</div>`:'');
+  $('statsModal').hidden=false;
+}
+
+/* =====================================================================
+   NAVIGATION
+   ===================================================================== */
+const VIEWS=['test','practice','multi','lobby','game','result'];
+let cur='test';
+function show(v){
+  cur=v;
+  VIEWS.forEach(k=>{$('v-'+k).hidden=(k!==v);});
+  const tab=['lobby','game','result'].includes(v)?'multi':v;
+  document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.view===tab));
+  document.body.classList.toggle('racing',v==='game');
+  window.scrollTo(0,0);
+}
+function go(v){
+  if(cur==='game')return;                              // finish or quit the race first
+  if(cur==='test')stopTest();
+  if(v==='test')resetTest();
+  if(v==='practice')startPractice();
+  if(v==='multi'){
+    if(NET.room&&NET.room.state==='lobby'){renderLobby();show('lobby');return;}
+    renderMulti();
+  }
+  show(v);
+}
+$('tabs').onclick=e=>{const b=e.target.closest('.tab');if(b){b.blur();go(b.dataset.view);}};
+$('brand').onclick=()=>go('test');
+let noticeT=null;
+function notice(msg,info){
+  const n=$('notice');n.textContent=msg;n.hidden=!msg;n.classList.toggle('info',!!info);
+  clearTimeout(noticeT);if(msg)noticeT=setTimeout(()=>{n.hidden=true;},7000);
+}
+
+/* =====================================================================
+   ON-SCREEN KEYBOARD (one per page)
+   ===================================================================== */
+const KB_ROWS=['qwertyuiop',"asdfghjkl'",'zxcvbnm'];
+function buildKeyboard(box){
+  box.innerHTML='';
+  KB_ROWS.forEach(r=>{
+    const row=document.createElement('div');row.className='kr';
+    r.split('').forEach(ch=>row.appendChild(makeKey(ch,ch,parse(ch))));
+    box.appendChild(row);
+  });
+  const last=document.createElement('div');last.className='kr';
+  last.appendChild(makeKey(' ','space','',true));
+  last.appendChild(makeKey('Backspace','⌫','',false));
+  box.appendChild(last);
+}
+function makeKey(k,label,sub,wide){
+  const b=document.createElement('button');
+  b.className='key'+(wide?' wide':'');
+  b.dataset.k=k;
+  b.innerHTML=`<span>${label}</span>${sub?`<small>${sub}</small>`:''}`;
+  b.addEventListener('pointerdown',e=>{e.preventDefault();route(k);});
+  return b;
+}
+const allKeys=()=>[...document.querySelectorAll('.key')];
+function setNextKey(ch){allKeys().forEach(b=>b.classList.toggle('next',ch!=null&&b.dataset.k===ch));}
+function badKey(k){allKeys().filter(b=>b.dataset.k===k).forEach(b=>{b.classList.add('badkey');setTimeout(()=>b.classList.remove('badkey'),200);});}
+function shake(elm){elm.classList.remove('bad');void elm.offsetWidth;elm.classList.add('bad');}
+// glyph spans: green once that letter has been typed correctly
+function glyphsHtml(word,buf){
+  const parsed=parse(buf);
+  return [...word].map((g,i)=>{
+    const done=i<parsed.length&&parsed[i]===g&&(i<parsed.length-1||parsed===word);
+    return `<span class="g${done?' done':''}">${g===' '?'&nbsp;':g}</span>`;
+  }).join('');
+}
+function typedHtml(buf){
+  const head=[...parse(buf)],lastG=head.pop()||'';
+  return esc(head.join(''))+(lastG?`<i>${esc(lastG)}</i>`:'&nbsp;');
+}
+function hintHtml(vars,buf){
+  const v=vars.find(x=>x.startsWith(buf))||vars[0];
+  return {html:`<b>${esc(buf)}</b>${esc(v.slice(buf.length)).replace(/ /g,'␣')}`,next:v[buf.length]};
+}
+function route(key){
+  if(cur==='game')press(key);
+  else if(cur==='test')testKey(key);
+  else if(cur==='practice')practiceKey(key);
+}
+
+/* =====================================================================
+   SPEED TEST
+   ===================================================================== */
+const TEST_WORDS=WORDS.filter(w=>!w.includes(' '));
+const T={dur:60,words:[],idx:0,buf:'',vars:[],started:false,done:false,t0:0,timer:null,correct:0,wrong:0,netKeys:0,letters:0,wordsDone:0};
+function extendWords(){
+  while(T.words.length<T.idx+60){
+    const batch=pick(TEST_WORDS,TEST_WORDS.length);
+    if(T.words.length&&batch[0]===T.words[T.words.length-1])batch.push(batch.shift());
+    T.words.push(...batch);
+  }
+}
+function resetTest(){
+  clearInterval(T.timer);
+  Object.assign(T,{dur:prefs.dur,words:[],idx:0,buf:'',started:false,done:false,t0:0,timer:null,correct:0,wrong:0,netKeys:0,letters:0,wordsDone:0});
+  extendWords();T.vars=variants(T.words[0]);
+  $('tResult').hidden=true;$('tPlay').hidden=false;$('tStartHint').hidden=false;
+  $('kbT').hidden=!prefs.kb;
+  [...$('tDur').children].forEach(b=>b.classList.toggle('on',+b.dataset.d===T.dur));
+  $('tHints').checked=prefs.hints;$('tKb').checked=prefs.kb;
+  renderTestBest();renderTest();
+}
+function stopTest(){clearInterval(T.timer);T.timer=null;if(T.started&&!T.done){T.started=false;}}
+function renderTestBest(){
+  const b=store.bestTest[String(T.dur)];
+  $('tBest').textContent=b?`Your best: ${b} WPM`:'';
+}
+const testSecs=()=>T.started?Math.min(T.dur,(performance.now()-T.t0)/1000):0;
+const testNet=()=>T.netKeys+T.buf.length;
+const testWpm=secs=>secs>=1?Math.round((testNet()/5)/(secs/60)):0;
+const testAcc=()=>{const t=T.correct+T.wrong;return t?Math.round(T.correct/t*100):100;};
+function testKey(key){
+  if(T.done)return;
+  if(key==='Backspace'){T.buf=T.buf.slice(0,-1);renderTest();return;}
+  const k=key.toLowerCase();
+  if(!/^[a-z' ]$/.test(k))return;
+  if(k===' '&&T.buf==='')return;                      // a space between words is fine
+  if(!T.started){T.started=true;T.t0=performance.now();T.timer=setInterval(testTick,100);$('tStartHint').hidden=true;}
+  const nb=T.buf+k,word=T.words[T.idx];
+  if(T.vars.some(v=>v.startsWith(nb))){
+    T.buf=nb;T.correct++;
+    if(parse(nb)===word){
+      T.netKeys+=nb.length;T.letters+=[...word].length;T.wordsDone++;
+      T.idx++;extendWords();T.buf='';T.vars=variants(T.words[T.idx]);
+    }
+  }else{T.wrong++;badKey(k);shake($('tStage'));}
+  renderTest();
+}
+function testTick(){updateTestHud();if(testSecs()>=T.dur)finishTest();}
+function updateTestHud(){
+  const s=testSecs(),left=Math.max(0,T.dur-s);
+  $('tTime').textContent=left.toFixed(1)+'s';
+  $('tTime').classList.toggle('low',T.started&&left<10);
+  $('tWpm').textContent=testWpm(s);
+  $('tAcc').textContent=testAcc()+'%';
+  $('tWords').textContent=T.wordsDone;
+}
+function renderTest(){
+  const CH=12,start=Math.floor(T.idx/CH)*CH,end=start+CH*2;
+  let html='';
+  for(let i=start;i<end;i++){
+    const w=T.words[i];
+    if(i<T.idx)html+=`<span class="w ok">${w}</span> `;
+    else if(i===T.idx)html+=`<span class="w cur">${glyphsHtml(w,T.buf)}</span> `;
+    else html+=`<span class="w">${w}</span> `;
+  }
+  $('tPassage').innerHTML=html;
+  const h=hintHtml(T.vars,T.buf);
+  $('tHint').innerHTML=prefs.hints?h.html:'';
+  $('tTyped').innerHTML=typedHtml(T.buf);
+  setNextKey(prefs.hints&&!T.done?h.next:null);
+  updateTestHud();
+}
+function finishTest(){
+  if(T.done)return;
+  T.done=true;clearInterval(T.timer);T.timer=null;
+  const wpm=testWpm(T.dur),acc=testAcc();
+  const prev=store.bestTest[String(T.dur)]||0,isBest=wpm>prev&&wpm>0;
+  if(isBest)store.bestTest[String(T.dur)]=wpm;
+  store.tests.push({wpm,acc,dur:T.dur,words:T.wordsDone,date:Date.now()});
+  store.tests=store.tests.slice(-100);
+  persist();
+  setNextKey(null);
+  $('tPlay').hidden=true;$('tResult').hidden=false;
+  const grade=wpm>=50?'Excellent typing!':wpm>=30?'Great job!':wpm>=15?'Nice work!':'Good start!';
+  $('trTitle').textContent=isBest?'🎉 New personal best!':grade;
+  $('trWpm').textContent=wpm;
+  $('trStats').innerHTML=`<div><b>${acc}%</b>Accuracy</div><div><b>${T.wordsDone}</b>Words</div><div><b>${T.letters}</b>Fidel letters</div><div><b>${T.dur===120?'2 min':T.dur+'s'}</b>Test length</div>`;
+  $('trBest').textContent=prev?(isBest?`Previous best: ${prev} WPM`:`Your best for this length: ${prev} WPM`):'First result saved for this length.';
+  $('trSignin').hidden=!!AUTH.user;
+  renderTestBest();
+  window.scrollTo(0,0);
+}
+$('tDur').onclick=e=>{const b=e.target.closest('button');if(!b)return;b.blur();prefs.dur=+b.dataset.d;savePrefs();resetTest();};
+$('tHints').onchange=e=>{prefs.hints=e.target.checked;savePrefs();e.target.blur();renderTest();};
+$('tKb').onchange=e=>{prefs.kb=e.target.checked;savePrefs();e.target.blur();$('kbT').hidden=!prefs.kb;};
+$('tRestart').onclick=e=>{e.currentTarget.blur();resetTest();};
+$('trAgain').onclick=()=>resetTest();
+$('trPractice').onclick=()=>go('practice');
+$('trMulti').onclick=()=>go('multi');
+$('trSigninLink').onclick=e=>{e.preventDefault();openAuth('register');};
+// remember only what the player chose themselves (the default is open on desktop, closed on phones)
+$('how').querySelector('summary').addEventListener('click',()=>setTimeout(()=>{prefs.how=$('how').open;savePrefs();},0));
+$('ref').innerHTML=[['ሀ','he'],['ሁ','hu'],['ሂ','hi'],['ሃ','ha'],['ሄ','hie'],['ህ','h'],['ሆ','ho']]
+  .map(([g,r])=>`<div><b>${g}</b>${r}</div>`).join('');
+
+/* =====================================================================
+   PRACTICE
+   ===================================================================== */
+const P={mode:'letters',row:'all',target:'',meaning:'',vars:[],buf:'',missed:false,typed:0,correct:0,wrong:0,streak:0,bestStreak:0,bag:[],last:'',hints:true,meaningOn:true};
+function weakGlyphs(){return Object.keys(store.practice.weak);}
+function practicePool(){
+  if(P.row==='weak'&&weakGlyphs().length)return weakGlyphs();
+  const fams=(P.row==='all'||P.row==='weak')?FAMILIES:FAMILIES.filter(f=>f.token===P.row);
+  return fams.flatMap(f=>f.glyphs);
+}
+function pickLetter(pool){
+  const weak=store.practice.weak;let total=0;
+  const ws=pool.map(g=>{const w=1+3*Math.min(5,weak[g]||0);total+=w;return w;});
+  for(let tries=0;tries<6;tries++){
+    let r=Math.random()*total,i=0;
+    for(;i<pool.length-1;i++){r-=ws[i];if(r<=0)break;}
+    if(pool[i]!==P.last||pool.length===1)return pool[i];
+  }
+  return pool.find(g=>g!==P.last)||pool[0];
+}
+function startPractice(){
+  Object.assign(P,{typed:0,correct:0,wrong:0,streak:0,bestStreak:0,bag:[],last:'',hints:$('pHints').checked,meaningOn:$('pMeaningOn').checked});
+  renderPracticeAll();nextPractice();
+}
+function renderPracticeAll(){
+  [...$('pMode').children].forEach(b=>b.classList.toggle('on',b.dataset.m===P.mode));
+  $('pRowsWrap').hidden=P.mode!=='letters';
+  $('pTarget').classList.toggle('words',P.mode==='words');
+  $('pMeaningLbl').hidden=P.mode!=='words';
+  renderRows();renderWeak();
+}
+function renderRows(){
+  const hasWeak=weakGlyphs().length>0;
+  if(P.row==='weak'&&!hasWeak)P.row='all';
+  const chips=[['all','All letters','']];
+  if(hasWeak)chips.push(['weak','Weak letters','']);
+  FAMILIES.forEach(f=>chips.push([f.token,f.glyphs[0],f.token]));
+  $('pRows').innerHTML=chips.map(([t,a,b])=>`<button class="chip${P.row===t?' on':''}" data-row="${esc(t)}">${esc(a)}${b?`<small>${esc(b)}</small>`:''}</button>`).join('');
+}
+function renderWeak(){
+  const weak=Object.entries(store.practice.weak).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  $('pWeakCard').hidden=!weak.length||P.mode!=='letters';
+  $('pWeak').innerHTML=weak.map(([g])=>`<div><b>${esc(g)}</b>${esc(variants(g)[0])}</div>`).join('');
+}
+function nextPractice(){
+  let t,m='';
+  if(P.mode==='words'){
+    if(!P.bag.length)P.bag=pick(VOCAB,VOCAB.length);
+    if(P.bag.length>1&&P.bag[P.bag.length-1][0]===P.last)P.bag.unshift(P.bag.pop());
+    const it=P.bag.pop();t=it[0];m=it[1];
+  }else t=pickLetter(practicePool());
+  P.target=t;P.meaning=m;P.vars=variants(t);P.buf='';P.missed=false;
+  renderPractice();
+}
+function renderPractice(){
+  $('pTarget').innerHTML=glyphsHtml(P.target,P.buf);
+  $('pMeaning').textContent=P.mode==='words'&&P.meaningOn?P.meaning:'';
+  const h=hintHtml(P.vars,P.buf);
+  $('pHint').innerHTML=P.hints?h.html:'';
+  $('pTyped2').innerHTML=typedHtml(P.buf);
+  setNextKey(P.hints?h.next:null);
+  const tot=P.correct+P.wrong;
+  $('pTyped').textContent=P.typed;
+  $('pAcc').textContent=(tot?Math.round(P.correct/tot*100):100)+'%';
+  $('pStreak').textContent=P.streak;
+  $('pBest').textContent=P.bestStreak;
+}
+function practiceKey(key){
+  if(key==='Backspace'){P.buf=P.buf.slice(0,-1);renderPractice();return;}
+  const k=key.toLowerCase();
+  if(!/^[a-z' ]$/.test(k))return;
+  if(k===' '&&P.buf==='')return;
+  const nb=P.buf+k;
+  if(P.vars.some(v=>v.startsWith(nb))){
+    P.buf=nb;P.correct++;
+    if(parse(nb)===P.target){practiceDone();return;}
+  }else{
+    P.wrong++;badKey(k);shake($('pStage'));
+    if(!P.missed){
+      P.missed=true;P.streak=0;
+      if(P.mode==='letters'){
+        const w=store.practice.weak;w[P.target]=Math.min(9,(w[P.target]||0)+1);
+        persist();renderWeak();renderRows();               // show it in "Needs more practice" straight away
+      }
+    }
+  }
+  renderPractice();
+}
+function practiceDone(){
+  P.typed++;
+  if(!P.missed){
+    P.streak++;P.bestStreak=Math.max(P.bestStreak,P.streak);
+    if(P.mode==='letters'){const w=store.practice.weak;if(w[P.target]>0){w[P.target]--;if(!w[P.target])delete w[P.target];}}
+  }
+  store.practice[P.mode==='words'?'words':'letters']++;
+  persist();
+  P.last=P.target;
+  renderWeak();if(P.mode==='letters')renderRows();
+  nextPractice();
+}
+$('pMode').onclick=e=>{
+  const b=e.target.closest('button');if(!b)return;b.blur();
+  P.mode=b.dataset.m;P.bag=[];Object.assign(P,{typed:0,correct:0,wrong:0,streak:0,bestStreak:0,last:''});
+  renderPracticeAll();nextPractice();
+};
+$('pRows').onclick=e=>{
+  const b=e.target.closest('.chip');if(!b)return;b.blur();
+  P.row=b.dataset.row;P.last='';renderRows();nextPractice();
+};
+$('pHints').onchange=e=>{P.hints=e.target.checked;e.target.blur();renderPractice();};
+$('pMeaningOn').onchange=e=>{P.meaningOn=e.target.checked;e.target.blur();renderPractice();};
+$('pReset').onclick=e=>{e.currentTarget.blur();Object.assign(P,{typed:0,correct:0,wrong:0,streak:0,bestStreak:0});renderPractice();};
+$('pWeakGo').onclick=()=>{P.mode='letters';P.row='weak';P.last='';renderPracticeAll();nextPractice();window.scrollTo(0,0);};
+(function buildChart(){
+  const cols=['1st (-e)','2nd (-u)','3rd (-i)','4th (-a)','5th (-ie)','6th (-)','7th (-o)'];
+  const thead='<thead><tr><th>Family</th>'+cols.map(c=>`<th style="text-align:center">${c}</th>`).join('')+'</tr></thead>';
+  $('pChart').innerHTML='<table>'+thead+'<tbody>'+FAMILIES.map(f=>
+    `<tr><td class="rowhead" data-row="${esc(f.token)}" title="Practise this family">${f.glyphs[0]} <small>(${esc(f.token)})</small></td>`+
+    f.glyphs.map(g=>`<td><span class="g">${g}</span><small>${esc(variants(g)[0])}</small></td>`).join('')+'</tr>').join('')+'</tbody></table>';
+})();
+$('pChart').onclick=e=>{
+  const c=e.target.closest('.rowhead');if(!c)return;
+  P.mode='letters';P.row=c.dataset.row;P.last='';renderPracticeAll();nextPractice();window.scrollTo(0,0);
+};
+
+/* =====================================================================
+   NETWORK (online PvP)
+   ===================================================================== */
+const NET={ws:null,id:null,room:null};
+function connect(){
+  return new Promise((res,rej)=>{
+    if(NET.ws&&NET.ws.readyState===1)return res();
+    if(PREVIEW||location.protocol==='file:')return rej(new Error('Online play needs the server. Run "npm start" and open http://localhost:3000.'));
+    let ws;
+    try{ws=new WebSocket((location.protocol==='https:'?'wss://':'ws://')+location.host);}catch(e){return rej(new Error('Could not open a connection.'));}
+    NET.ws=ws;
+    ws.onopen=()=>{if(AUTH.token)ws.send(JSON.stringify({t:'auth',token:AUTH.token}));res();};
+    ws.onerror=()=>rej(new Error('Could not reach the game server.'));
+    ws.onmessage=e=>{let m;try{m=JSON.parse(e.data);}catch(_){return;}onMsg(m);};
+    ws.onclose=()=>onClose(ws);
+  });
+}
+function sendNet(o){if(NET.ws&&NET.ws.readyState===1)NET.ws.send(JSON.stringify(o));}
+async function online(fn){
+  try{await connect();fn();}catch(e){notice(e.message);}
+}
+function onClose(ws){
+  if(NET.ws!==ws)return;
+  NET.ws=null;NET.room=null;
+  $('qbox').hidden=true;
+  const wasOnline=S&&S.mode==='online'&&!S.done;
+  if(S&&S.mode==='online'){clearInterval(S.timer);S=null;}
+  if(['lobby','game','result'].includes(cur)){renderMulti();show('multi');}
+  if(wasOnline||cur==='multi')notice('Connection to the server was lost.');
+}
+function onMsg(m){
+  switch(m.t){
+    case 'welcome': NET.id=m.id;break;
+    case 'error': notice(m.msg);break;
+    case 'queue': {
+      $('qbox').hidden=false;
+      const L=LEVELS.find(l=>l.id===m.level);
+      $('qtext').textContent='Looking for an opponent on Level '+m.level+(L?' ('+L.name+')':'')+'…';
+      break;
+    }
+    case 'queue_left': $('qbox').hidden=true;break;
+    case 'room':
+      NET.room=m;
+      $('qbox').hidden=true;
+      if(m.state==='lobby'&&!['game','result'].includes(cur)){renderLobby();show('lobby');}
+      else if(cur==='lobby')renderLobby();
+      break;
+    case 'start': startOnline(m);break;
+    case 'state': onState(m);break;
+    case 'results': finishOnline(m);break;
+  }
+}
+
+/* ---------- multiplayer page + lobby ---------- */
+const levelOpts=LEVELS.map(l=>`<option value="${l.id}">Level ${l.id}: ${l.name}</option>`).join('');
+$('mLevel').innerHTML=levelOpts;$('lLevel').innerHTML=levelOpts;
+const lvl=()=>+$('mLevel').value;
+function renderMulti(){
+  $('mNameRow').hidden=!!AUTH.user;
+  $('mName').value=store.name||'';
+  $('diff').value=store.diff||'normal';
+  const p=store.pvp;
+  $('pvpRec').textContent=p.races?`Online record: ${p.wins} wins / ${p.races} races`:'';
+  const b=store.best[lvl()];
+  $('mBest').textContent=b?`Your best on this level: ${b.score} pts · ${ord(b.place)} · ${b.wpm} WPM`:'';
+  const runs=(store.runs||[]).slice().sort((a,b)=>b.score-a.score).slice(0,6);
+  $('board').innerHTML=runs.length
+    ?`<table><tr><th>#</th><th>Player</th><th>Mode</th><th>Level</th><th>Place</th><th>Score</th><th>WPM</th></tr>`+
+      runs.map((r,i)=>`<tr><td>${i+1}</td><td>${esc(r.name)}</td><td>${r.mode==='online'?'Online':'Bots'}</td><td>${r.level}</td><td>${r.finished?ord(r.place):'DNF'}</td><td>${r.score}</td><td>${r.wpm}</td></tr>`).join('')+`</table>`
+    :'<small class="muted">Finish a race and your best results show up here.</small>';
+}
+$('mLevel').onchange=renderMulti;
+$('mName').addEventListener('input',()=>{store.name=$('mName').value.trim();persist();});
+$('diff').addEventListener('change',()=>{store.diff=$('diff').value;persist();});
+$('code').addEventListener('input',e=>{e.target.value=e.target.value.toUpperCase().replace(/[^A-Z]/g,'');});
+$('btnBots').onclick=()=>startSolo(lvl());
+$('btnQuick').onclick=()=>online(()=>sendNet({t:'quick',level:lvl(),name:myName()}));
+$('btnCreate').onclick=()=>online(()=>sendNet({t:'create',level:lvl(),name:myName()}));
+$('btnJoin').onclick=()=>{
+  const code=$('code').value.trim();
+  if(code.length!==4)return notice('Enter the 4-letter room code.');
+  online(()=>sendNet({t:'join',code,name:myName()}));
+};
+$('btnCancel').onclick=()=>sendNet({t:'cancel'});
+function renderLobby(){
+  const r=NET.room;if(!r)return;
+  const host=r.hostId===NET.id;
+  $('lCode').textContent=r.code;
+  $('lPlayers').innerHTML=r.players.map(p=>
+    `<li><span>${esc(p.name)}${p.id===NET.id?'<span class="tag">you</span>':''}${p.id===r.hostId?'<span class="tag">host</span>':''}</span></li>`).join('');
+  $('lLevel').value=String(r.level);
+  $('lLevel').disabled=!host;
+  $('btnStart').hidden=!host;
+  $('btnStart').disabled=r.players.length<2;
+  $('lWait').textContent=r.players.length<2
+    ?'Waiting for other players to join…'
+    :(host?'Ready when you are.':'Waiting for the host to start…');
+}
+$('btnLeave').onclick=()=>{sendNet({t:'leave'});NET.room=null;go('multi');};
+$('btnStart').onclick=()=>sendNet({t:'start'});
+$('lLevel').onchange=()=>sendNet({t:'level',level:+$('lLevel').value});
+
+/* =====================================================================
+   RACE (solo vs bots and online)
+   ===================================================================== */
+const el={target:$('target'),hint:$('hint'),typed:$('typed'),track:$('track'),count:$('count'),itemLbl:$('itemLbl'),
+  hLevel:$('hLevel'),hPlace:$('hPlace'),hTime:$('hTime'),hScore:$('hScore'),hWpm:$('hWpm'),hAcc:$('hAcc'),hintToggle:$('hintToggle')};
+let S=null;
+function makeState(o){
+  const lens=o.items.map(t=>variants(t)[0].length);
+  const total=lens.reduce((a,b)=>a+b,0);
+  return {mode:o.mode,L:LEVELS.find(l=>l.id===o.level),items:o.items,lens,total,
+    limit:o.limit||Math.round(total*1.5+10),idx:0,buf:'',target:'',vars:[],
+    correct:0,wrong:0,itemMiss:0,score:0,doneKeys:0,prog:0,
+    startLocal:o.startLocal,last:0,phase:'count',elapsed:0,done:false,finished:false,
+    timer:null,dirty:false,lastSent:0,racers:o.racers};
+}
+function begin(){
+  buildTrack();
+  show('game');
+  el.hLevel.textContent=S.L.id;
+  el.count.hidden=false;el.count.style.fontSize='';
+  loadItem();
+  S.timer=setInterval(tick,80);
+  tick();
+}
+function startSolo(id){
+  const items=makeItems(id);
+  const mult=DIFF[store.diff]||1;
+  const racers=[{name:myName()||'You',color:COLORS[0],me:true,prog:0,wpm:0,fin:null}]
+    .concat(RIVALS.map((b,i)=>({name:b.name,color:b.color,rate:RIVAL_RATE[id][i]*mult,prog:0,wpm:0,fin:null})));
+  S=makeState({mode:'solo',level:id,items,startLocal:Date.now()+3000,racers});
+  begin();
+}
+function startOnline(m){
+  if(S&&S.timer)clearInterval(S.timer);
+  stopTest();
+  const offset=m.serverNow-Date.now();
+  const racers=m.players.map((p,i)=>({id:p.id,name:p.name,
+    me:p.id===NET.id,prog:0,wpm:0,fin:null,left:false,color:p.id===NET.id?COLORS[0]:COLORS[1+(i%3)]}));
+  racers.sort((a,b)=>(b.me-a.me));
+  S=makeState({mode:'online',level:m.level,items:m.items,limit:m.limit,startLocal:m.startAt-offset,racers});
+  begin();
+}
+function buildTrack(){
+  el.track.innerHTML='';
+  S.racers.forEach(r=>{
+    const lane=document.createElement('div');
+    lane.className='lane'+(r.me?' me':'');
+    lane.innerHTML=`<div class="fill" style="background:${r.color}"></div><div class="nm">${esc(r.name)}${r.me?' (you)':''}</div><div class="car">🏎️</div><div class="wpm">0 WPM</div><div class="flag">🏁</div>`;
+    r.lane=lane;r.car=lane.querySelector('.car');r.fillEl=lane.querySelector('.fill');r.wpmEl=lane.querySelector('.wpm');
+    el.track.appendChild(lane);
+  });
+}
+const myRaceWpm=()=>S.elapsed>1?Math.round((S.correct/5)/(S.elapsed/60)):0;
+function updateTrack(){
+  S.prog=Math.min(1,(S.doneKeys+S.buf.length)/S.total);
+  const me=S.racers[0];me.prog=S.prog;me.wpm=S.phase==='race'?myRaceWpm():0;
+  S.racers.forEach(r=>{
+    r.car.style.left=`calc((100% - 70px) * ${r.prog})`;
+    r.fillEl.style.width=(r.prog*100)+'%';
+    r.wpmEl.textContent=r.wpm+' WPM';
+    r.lane.classList.toggle('gone',!!r.left);
+  });
+}
+function livePlace(){const me=S.racers[0];return 1+S.racers.filter(r=>!r.me&&!r.left&&r.prog>me.prog).length;}
+function loadItem(){
+  S.target=S.items[S.idx];
+  S.vars=variants(S.target);
+  S.buf='';S.itemMiss=0;
+  render();
+}
+function press(key){
+  if(!S||S.done||S.finished||S.phase!=='race'||S.elapsed>=S.limit)return;
+  if(key==='Backspace'){S.buf=S.buf.slice(0,-1);S.dirty=true;render();return;}
+  const k=key.toLowerCase();
+  if(!/^[a-z' ]$/.test(k))return;
+  const nb=S.buf+k;
+  if(S.vars.some(v=>v.startsWith(nb))){
+    S.buf=nb;S.correct++;S.dirty=true;
+    if(parse(nb)===S.target){itemDone();return;}
+  }else{
+    S.wrong++;S.itemMiss++;S.dirty=true;badKey(k);shake(el.target);
+  }
+  render();
+}
+function itemDone(){
+  const len=S.lens[S.idx];
+  S.score+=Math.max(5,len*10-S.itemMiss*5);
+  S.doneKeys+=len;
+  S.idx++;
+  if(S.idx>=S.items.length){
+    S.finished=true;S.buf='';
+    S.elapsed=Math.min(S.limit,(Date.now()-S.startLocal)/1000);
+    updateTrack();
+    if(S.mode==='solo')return finishSolo(true);
+    sendProgress(true);
+    el.count.hidden=false;el.count.style.fontSize='1.6rem';
+    el.count.textContent='🏁 Finished! Waiting for the other players…';
+    updateHud();
+  }else loadItem();
+}
+function sendProgress(force){
+  if(!S||S.mode!=='online')return;
+  const now=Date.now();
+  if(!force&&now-S.lastSent<100)return;
+  S.lastSent=now;S.dirty=false;
+  sendNet({t:'p',k:S.doneKeys+S.buf.length,c:S.correct,w:S.wrong});
+}
+const raceAcc=()=>{const t=S.correct+S.wrong;return t?Math.round(S.correct/t*100):100;};
+function tick(){
+  if(!S||S.done)return;
+  const now=Date.now();
+  if(S.phase==='count'){
+    const ms=S.startLocal-now;
+    if(ms>0){
+      el.count.hidden=false;el.count.style.fontSize='';
+      el.count.textContent=String(Math.ceil(ms/1000));
+      updateHud();return;
+    }
+    S.phase='race';S.last=now;
+    el.count.textContent='GO!';
+    const mine=S;setTimeout(()=>{if(S===mine&&!S.finished)el.count.hidden=true;},600);
+  }
+  const dt=Math.min(0.25,(now-S.last)/1000);
+  S.last=now;
+  if(!S.finished)S.elapsed=Math.max(0,Math.min(S.limit,(now-S.startLocal)/1000));
+  if(S.mode==='solo'){
+    S.racers.forEach(b=>{
+      if(b.me||b.prog>=1)return;
+      b.prog=Math.min(1,b.prog+b.rate*(0.7+Math.random()*0.6)*dt/S.total);
+      if(b.prog>=1)b.fin=S.elapsed;
+      const secs=b.fin!=null?b.fin:S.elapsed;
+      b.wpm=secs>1?Math.round((b.prog*S.total/5)/(secs/60)):0;
+    });
+    if(S.elapsed>=S.limit){finishSolo(false);return;}
+  }else{
+    if(S.dirty)sendProgress();
+    if(S.elapsed>=S.limit&&!S.finished){
+      el.count.hidden=false;el.count.style.fontSize='1.6rem';
+      el.count.textContent="⏱ Time's up! Getting the results…";
+    }
+  }
+  updateTrack();updateHud();
+}
+function updateHud(){
+  const left=S.phase==='race'?Math.max(0,S.limit-S.elapsed):S.limit;
+  el.hTime.textContent=left.toFixed(1)+'s';
+  el.hTime.classList.toggle('low',left<10);
+  el.hScore.textContent=S.score;
+  el.hWpm.textContent=S.phase==='race'?myRaceWpm():0;
+  el.hAcc.textContent=raceAcc()+'%';
+  el.hPlace.textContent=ord(livePlace());
+  el.itemLbl.textContent=`${Math.min(S.idx+1,S.items.length)} / ${S.items.length}`;
+}
+function render(){
+  el.target.innerHTML=glyphsHtml(S.target,S.buf);
+  const h=hintHtml(S.vars,S.buf);
+  el.hint.innerHTML=el.hintToggle.checked?h.html:'';
+  el.typed.innerHTML=typedHtml(S.buf);
+  setNextKey(el.hintToggle.checked?h.next:null);
+  if(S.mode==='online')sendProgress();
+  updateTrack();updateHud();
+}
+el.hintToggle.addEventListener('change',()=>{if(S&&cur==='game')render();});
+function onState(m){
+  if(!S||S.mode!=='online'||S.done)return;
+  m.players.forEach(p=>{
+    const r=S.racers.find(x=>x.id===p.id);
+    if(!r||r.me)return;
+    r.prog=Math.max(r.prog,p.prog);r.wpm=p.wpm;r.fin=p.fin;r.left=p.left;
+  });
+}
+
+/* ---------- race results ---------- */
+function standingsHtml(rows){
+  return rows.map((r,i)=>`<div${r.me?' style="font-weight:700"':''}><span>${i+1}. ${esc(r.name)}${r.left?' <span class="tag">left</span>':''}</span>`+
+    `<span>${r.wpm} WPM · ${r.finished?r.fin.toFixed(1)+'s':Math.round(r.prog*100)+'%'}</span></div>`).join('');
+}
+function scoreFor(won,place,acc,elapsed){
+  const bonus=won?({1:300,2:200,3:100}[place]||0):0;
+  const left=won?Math.max(0,S.limit-elapsed):0;
+  return Math.round((S.score+bonus+left*5)*(0.5+0.5*acc/100));
+}
+function record(rec,mode){
+  store.runs=(store.runs||[]).concat(Object.assign({name:myName()||'Player',level:S.L.id,mode,date:Date.now()},rec)).slice(-60);
+}
+function setButtons(mode){
+  $('rRetry').hidden=mode!=='solo';
+  $('rNext').hidden=mode!=='solo'||S.L.id>=LEVELS.length;
+  $('rRoom').hidden=mode!=='online';
+}
+function finishSolo(won){
+  S.done=true;clearInterval(S.timer);el.count.hidden=true;setNextKey(null);
+  const bots=S.racers.slice(1);
+  const place=won?1+bots.filter(b=>b.prog>=1).length:1+bots.filter(b=>b.prog>S.prog).length;
+  const acc=raceAcc(),wpm=myRaceWpm();
+  const finalScore=scoreFor(won,place,acc,S.elapsed);
+  const rec={score:finalScore,place,wpm,acc,finished:won};
+  const prev=store.best[S.L.id];
+  const isBest=!prev||finalScore>prev.score;
+  if(isBest)store.best[S.L.id]=rec;
+  record(rec,'solo');persist();
+  $('rTitle').textContent=won?(place===1?'🏆 You won!':place===2?'🥈 2nd place':'🥉 '+ord(place)+' place'):"⏱ Time's up!";
+  $('rSub').textContent=`Level ${S.L.id}: ${S.L.name}`+(isBest?' · New best score!':'');
+  $('rStats').innerHTML=`<div><b>${finalScore}</b>Score</div><div><b>${won?ord(place):'DNF'}</b>Place</div>
+    <div><b>${wpm}</b>WPM</div><div><b>${acc}%</b>Accuracy</div>
+    <div><b>${won?S.elapsed.toFixed(1)+'s':'0.0s'}</b>${won?'Finish time':'Time left'}</div>`;
+  const rows=S.racers.map(r=>({name:r.name,me:r.me,prog:r.me&&won?1:r.prog,fin:r.me?(won?S.elapsed:null):r.fin,
+    finished:r.me?won:r.prog>=1,wpm:r.me?wpm:r.wpm}));
+  rows.sort((a,b)=>(b.prog-a.prog)||((a.fin??1e9)-(b.fin??1e9)));
+  $('rBoard').innerHTML=standingsHtml(rows);
+  setButtons('solo');show('result');
+}
+function finishOnline(m){
+  if(!S||S.mode!=='online'||S.done)return;
+  S.done=true;clearInterval(S.timer);el.count.hidden=true;setNextKey(null);
+  const rows=m.standings.map(r=>({id:r.id,name:r.name,me:r.id===NET.id,
+    prog:r.prog,fin:r.fin,finished:r.finished,wpm:r.wpm,acc:r.acc,left:r.left,place:r.place}));
+  const mine=rows.find(r=>r.me)||{place:rows.length,finished:false,wpm:0,acc:raceAcc(),prog:S.prog,fin:null};
+  const forfeitWin=!!m.forfeit&&!mine.left&&mine.place===1;      // everyone else left the race
+  const won=mine.finished||forfeitWin,place=mine.place;
+  const finalScore=scoreFor(won,place,mine.acc,mine.fin!=null?mine.fin:S.elapsed);
+  record({score:finalScore,place,wpm:mine.wpm,acc:mine.acc,finished:won},'online');
+  store.pvp.races++;if(won&&place===1)store.pvp.wins++;
+  persist();
+  $('rTitle').textContent=forfeitWin?'🏆 You win — everyone else left!':won?(place===1?'🏆 You won!':place===2?'🥈 2nd place':'🥉 '+ord(place)+' place'):"⏱ Time's up!";
+  $('rSub').textContent=`Level ${S.L.id}: ${S.L.name} · ${rows.length} players`;
+  $('rStats').innerHTML=`<div><b>${finalScore}</b>Score</div><div><b>${won?ord(place):'DNF'}</b>Place</div>
+    <div><b>${mine.wpm}</b>WPM</div><div><b>${mine.acc}%</b>Accuracy</div>
+    <div><b>${mine.fin!=null?mine.fin.toFixed(1)+'s':'—'}</b>Finish time</div>`;
+  $('rBoard').innerHTML=standingsHtml(rows);
+  setButtons('online');show('result');
+}
+$('rRetry').onclick=()=>startSolo(S.L.id);
+$('rNext').onclick=()=>startSolo(S.L.id+1);
+$('rRoom').onclick=()=>{
+  if(NET.room&&NET.ws){renderLobby();show('lobby');}
+  else go('multi');
+};
+$('rMenu').onclick=()=>leaveAll();
+function leaveAll(){
+  if(S&&S.timer)clearInterval(S.timer);
+  if((S&&S.mode==='online')||NET.room)sendNet({t:'leave'});
+  NET.room=null;S=null;setNextKey(null);
+  cur='multi';go('multi');
+}
+$('quit').onclick=leaveAll;
+
+/* =====================================================================
+   KEYBOARD INPUT
+   ===================================================================== */
+document.addEventListener('keydown',e=>{
+  if(!$('authModal').hidden||!$('statsModal').hidden){if(e.key==='Escape')closeModals();return;}
+  const tag=e.target&&e.target.tagName;
+  if(tag==='INPUT'||tag==='TEXTAREA'||tag==='SELECT')return;
+  if(e.ctrlKey||e.metaKey||e.altKey)return;
+  if(e.key==='Escape'){
+    if(cur==='test')resetTest();
+    else if(cur==='game'&&S&&S.mode==='solo')leaveAll();
+    return;
+  }
+  if(cur!=='test'&&cur!=='practice'&&cur!=='game')return;
+  if(cur==='game'&&!S)return;
+  if(e.key==='Backspace'||e.key.length===1){e.preventDefault();route(e.key);}
+});
+
+/* =====================================================================
+   START
+   ===================================================================== */
+buildKeyboard($('kbT'));buildKeyboard($('kbP'));buildKeyboard($('kbG'));
+const fsBtn = $('fsBtn');
+if (fsBtn) {
+  fsBtn.onclick = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(() => {});
+    } else {
+      document.exitFullscreen().catch(() => {});
+    }
+  };
+}
+document.addEventListener('fullscreenchange', () => {
+  const isFs = !!document.fullscreenElement;
+  if (fsBtn) fsBtn.textContent = isFs ? '🗗 Exit' : '⛶ Fullscreen';
+  document.body.classList.toggle('is-fullscreen', isFs);
+});
+$('how').open=prefs.how===undefined?window.innerWidth>700:!!prefs.how;
+$('tHints').checked=prefs.hints;
+renderAcct();
+resetTest();
+show('test');
+initAuth();
+</script>
+</body>
+</html>

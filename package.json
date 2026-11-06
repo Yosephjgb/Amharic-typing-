@@ -1,0 +1,16 @@
+{
+  "name": "fidel-race",
+  "version": "1.0.0",
+  "description": "Amharic (Fidel) typing race with online PvP",
+  "private": true,
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
